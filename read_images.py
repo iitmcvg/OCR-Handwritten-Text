@@ -3,7 +3,8 @@ import cv2
 import os
 import glob
 
-path = 'by_class'
+# path = 'by_class'
+path = 'test'
 
 t1 = time.time()
 file_names=glob.glob(os.path.join(path,'*','train_*','*.[pP][nN][gG]'))
@@ -21,3 +22,4 @@ print('Time to list labels: ', t3-t2)
 images = [cv2.imread(file) for file in file_names]
 t4 = time.time()
 print('Time to read images: ',t4-t3)
+
