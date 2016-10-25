@@ -43,3 +43,4 @@ coord.request_stop()
 coord.join(threads)
 t4 = time.time()
 print('Time to read images: ',t4-t3)
+# Takes about  seconds to read test folder on my 4GB PC :-D
