@@ -99,11 +99,21 @@ y_ = tf.placeholder(tf.float32, [None, 3])
 print('labels : ',labels_oneHotEncoded)
 print('column size : ',images[1].shape)
 print('no. of images :', len(images))
-cv2.namedWindow('Input',0) 
-cv2.imshow('Input',images[1].reshape(128,128))	
+cv2.namedWindow('Input',0)
+images=images/255.0;
+print images[0]
+print('non zero :',np.count_nonzero(images[0])) 
+tf.convert_to_tensor(images)
+# while(True) :
+# 	for i in range (10) :
+# 		cv2.imshow('Input',images[60*i].reshape(128,128))
+# 		if cv2.waitKey(100) & 0xFF == ord('q'):
+# 			break
+# 	if cv2.waitKey(100) & 0xFF == ord('e'):
+# 		break		
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y), reduction_indices=[1]))
 
-train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+train_step = tf.train.GradientDescentOptimizer(0.5,use_locking=False).minimize(cross_entropy)
 
 init = tf.initialize_all_variables()
 
@@ -121,5 +131,11 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 # print(correct_prediction)
 # print "\nReached....."
 print(sess.run(accuracy, feed_dict={x: images, y_: labels_oneHotEncoded}))
+
+# while(True) :
+# 	cv2.imshow('Input',x[0].reshape(128,128))
+# 	if cv2.waitKey(100) & 0xFF == ord('q'):
+#  			break
+print x[0]
 #print(len(label_names[1,:]))
 #print(np.nonzero(label_names))
