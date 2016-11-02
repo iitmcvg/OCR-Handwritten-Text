@@ -58,10 +58,10 @@ print('Time to list labels: ', t3-t2)
 # key, value = reader.read(filename_queue)
 # my_img = tf.image.decode_png(value, channels=1,dtype=float32) # use png or jpg decoder based on your files.
 
-init_op = tf.initialize_all_variables()
+# init_op = tf.initialize_all_variables()
 
 sess =  tf.Session()
-sess.run(init_op)
+# sess.run(init_op)
 
 # Start populating the filename queue.
 coord = tf.train.Coordinator()
@@ -70,12 +70,16 @@ threads = tf.train.start_queue_runners(coord=coord, sess=sess)
 images = []
 # for i in range(len(labels)): #length of your filename list
 #   images.append(my_img.eval(session = sess).ravel() ) #here is your image Tensor :)
-for i in range(no_of_files):
-	images.append(cv2.imread(file_names[i],0))
-for i in range(no_of_files):
-	images[i]=images[i].reshape(-1)
   #images.append(my_img.eval(session = sess)) #here is your image Tensor :)
 
+for i in range(no_of_files):
+	# images.append(cv2.imread(file_names[i],0))
+	a=(cv2.imread(file_names[i],0))
+	a=np.array(a,dtype=np.float32)
+	images.append(a)
+
+for i in range(no_of_files):
+	images[i]=images[i].reshape(-1)
 #images=tf.to_float(images, name='ToFloat')						#Converting it to float32
 #images=tf.reshape(images, [len(images), 128*128])      
 #images=tf.cast(images, tf.float32, name=None)
@@ -90,20 +94,24 @@ print('Time to read images: ',t4-t3)
 
 
 
-x = tf.placeholder(tf.float32, [None, 128*128],name="x")
-W = tf.Variable(tf.zeros([128*128, 3]))
-b = tf.Variable(tf.zeros([3]))
+x = tf.placeholder(tf.float32, shape=[None, 128*128])
+W = tf.Variable(tf.zeros([128*128, 4]))
+b = tf.Variable(tf.zeros([4]))
 y = tf.nn.softmax(tf.matmul(x, W) + b)
-y_ = tf.placeholder(tf.float32, [None, 3])
+y_ = tf.placeholder(tf.float32, shape=[None, 4])
 
 print('labels : ',labels_oneHotEncoded)
 print('column size : ',images[1].shape)
 print('no. of images :', len(images))
 cv2.namedWindow('Input',0)
-images=images/255.0;
-print images[0]
+images=images*1.0/255.0;
+# for i in range(128*128) :
+# 	if(images[0][i]<1):
+# 		print images[0][i]
 print('non zero :',np.count_nonzero(images[0])) 
-tf.convert_to_tensor(images)
+
+# images2=tf.convert_to_tensor(images)
+
 # while(True) :
 # 	for i in range (10) :
 # 		cv2.imshow('Input',images[60*i].reshape(128,128))
@@ -136,6 +144,7 @@ print(sess.run(accuracy, feed_dict={x: images, y_: labels_oneHotEncoded}))
 # 	cv2.imshow('Input',x[0].reshape(128,128))
 # 	if cv2.waitKey(100) & 0xFF == ord('q'):
 #  			break
+print W[0]
 print x[0]
 #print(len(label_names[1,:]))
 #print(np.nonzero(label_names))
