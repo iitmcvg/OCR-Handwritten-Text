@@ -10,9 +10,10 @@ struct data
 {
   int img[28][28];
 } s1;
-int main()
+int main(int argc,char *argv[])
 {
-  ifstream f("segments.dat");
+  if(argc!=2) exit(0);
+  ifstream f(argv[1]);
   Mat m1(28,28,CV_8UC1);
 while(f.read((char*)&s1,sizeof(s1)))
 {
