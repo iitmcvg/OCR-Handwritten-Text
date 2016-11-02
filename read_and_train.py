@@ -3,23 +3,21 @@ import os
 import glob
 import tensorflow as tf
 import numpy as np
+import cv2
+import random
 
 # path = 'by_class'
 path = 'test'
 
+batch_size=64
+
 t1 = time.time()
-# file_names = tf.train.match_filenames_once(path+'*/train_*/*.png')
-# Originally done like this:
 file_names=glob.glob(os.path.join(path,'*','train_*','*.[pP][nN][gG]'))
-filename_queue = tf.train.string_input_producer(file_names)
-t2 = time.time()
-print(file_names)
-print('Time to list files: ', t2-t1)
-
 no_of_files=len(file_names)
+t2 = time.time()
+#print(file_names[0])
+print('Time to list files: ', t2-t1)
 print('No of files: ',no_of_files)
-
-
 
 unique_classes = [int(ele.split('/')[1], base=16) for ele in glob.glob(os.path.join(path,'*/'))]
 no_of_classes = len(unique_classes)
@@ -46,34 +44,17 @@ print('Class encoding: ', label_encoding)
 labels_oneHotEncoded = np.zeros((len(file_names),no_of_classes))
 for k in range(no_of_files):
 	labels_oneHotEncoded[k,label_encoding[label_names[k]]]=1
-# print(labels_oneHotEncoded)
 
-# tf.convert_to_tensor(label_names.eval())
 t3 = time.time()
 print('Time to list labels: ', t3-t2)
 
-
-
-reader = tf.WholeFileReader()
-key, value = reader.read(filename_queue)
-my_img = tf.image.decode_png(value, channels=1) # use png or jpg decoder based on your files.
-
-init_op = tf.initialize_all_variables()
-
-sess =  tf.Session()
-sess.run(init_op)
-
-# Start populating the filename queue.
-coord = tf.train.Coordinator()
-threads = tf.train.start_queue_runners(coord=coord, sess=sess)
-
 images = []
-for i in range(len(labels)): #length of your filename list
-  images.append(my_img.eval(session = sess).ravel() ) #here is your image Tensor :)
-images = np.array(images)
 
-coord.request_stop()
-coord.join(threads)
+for i in range(no_of_files):
+    a=np.array(cv2.imread(file_names[i], 0))
+    images.append(a.ravel())
+
+images = np.array(images)
 
 t4 = time.time()
 print('Time to read images: ',t4-t3)
@@ -81,32 +62,56 @@ print('Time to read images: ',t4-t3)
 # And the code works!!
 
 
-
-x = tf.placeholder(tf.float32, [None, 128*128],name="x")
-W = tf.Variable(tf.zeros([128*128, 2]))
-b = tf.Variable(tf.zeros([2]))
+x = tf.placeholder(tf.float32, shape=[None, 128*128])
+W = tf.Variable(tf.zeros([128*128, no_of_classes]))
+b = tf.Variable(tf.zeros([no_of_classes]))
 y = tf.nn.softmax(tf.matmul(x, W) + b)
-y_ = tf.placeholder(tf.float32, [None, 2])
+y_ = tf.placeholder(tf.float32, shape=[None, no_of_classes])
 
+print('labels : ',labels_oneHotEncoded)
+print('column size : ',images[1].shape)
+print('no. of images :', len(images))
+cv2.namedWindow('Input',0)
+images=images*1.0/255.0
+print('non zero :',np.count_nonzero(images[0])) 
+
+# while(True) :
+# 	for i in range (10) :
+# 		cv2.imshow('Input',images[60*i].reshape(128,128))
+# 		if cv2.waitKey(100) & 0xFF == ord('q'):
+# 			break
+# 	if cv2.waitKey(100) & 0xFF == ord('e'):
+# 		break
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y), reduction_indices=[1]))
 
-train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+train_step = tf.train.GradientDescentOptimizer(0.5,use_locking=False).minimize(cross_entropy)
 
 init = tf.initialize_all_variables()
 
 sess = tf.Session()
 sess.run(init)
 
-#Training the NN
-sess.run(train_step, feed_dict={x: images.reshape(1,images.shape[0]), y_: labels_oneHotEncoded})
+for i in range(100):
+    rand_idx = random.sample(range(no_of_files), batch_size)
+    batch_x, batch_y = images[rand_idx], labels_oneHotEncoded[rand_idx]
+    
+    #Training the NN
+    sess.run(train_step, feed_dict={x: batch_x, y_: batch_y})
+    print('Iteration {:} done'.format(i))
 
 correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
-print(correct_prediction)
+#print(correct_prediction)
 
-#accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 # print "\nReached"
-# print(correct_prediction)
+# print(correct_prediction)                                                 
 # print "\nReached....."
-# print(sess.run(correct_prediction, feed_dict={x: images.reshape(1,image.shape[0]), y_: labels_oneHotEncoded}))
+print(sess.run(accuracy, feed_dict={x: images, y_: labels_oneHotEncoded}))
+
+# while(True) :
+# 	cv2.imshow('Input',x[0].reshape(128,128))
+# 	if cv2.waitKey(100) & 0xFF == ord('q'):
+#  			break
+print( W[0],x[0])
 #print(len(label_names[1,:]))
 #print(np.nonzero(label_names))
