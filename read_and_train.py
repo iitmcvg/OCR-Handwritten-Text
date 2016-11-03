@@ -9,7 +9,7 @@ import random
 # path = 'by_class'
 path = 'test'
 
-batch_size=64
+batch_size=100
 
 t1 = time.time()
 file_names=glob.glob(os.path.join(path,'*','train_*','*.[pP][nN][gG]'))
@@ -75,43 +75,28 @@ cv2.namedWindow('Input',0)
 images=images*1.0/255.0
 print('non zero :',np.count_nonzero(images[0])) 
 
-# while(True) :
-# 	for i in range (10) :
-# 		cv2.imshow('Input',images[60*i].reshape(128,128))
-# 		if cv2.waitKey(100) & 0xFF == ord('q'):
-# 			break
-# 	if cv2.waitKey(100) & 0xFF == ord('e'):
-# 		break
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y), reduction_indices=[1]))
 
-train_step = tf.train.GradientDescentOptimizer(0.5,use_locking=False).minimize(cross_entropy)
+train_step = tf.train.GradientDescentOptimizer(0.001,use_locking=False).minimize(cross_entropy)
 
 init = tf.initialize_all_variables()
 
 sess = tf.Session()
 sess.run(init)
 
-for i in range(100):
+correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
+#print(correct_prediction)
+
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+acc_list = []
+for i in range(1000):
     rand_idx = random.sample(range(no_of_files), batch_size)
     batch_x, batch_y = images[rand_idx], labels_oneHotEncoded[rand_idx]
     
     #Training the NN
     sess.run(train_step, feed_dict={x: batch_x, y_: batch_y})
     print('Iteration {:} done'.format(i))
+    acc_list.append(sess.run(accuracy, feed_dict={x: images, y_: labels_oneHotEncoded}))
 
-correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
-#print(correct_prediction)
-
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-# print "\nReached"
-# print(correct_prediction)                                                 
-# print "\nReached....."
-print(sess.run(accuracy, feed_dict={x: images, y_: labels_oneHotEncoded}))
-
-# while(True) :
-# 	cv2.imshow('Input',x[0].reshape(128,128))
-# 	if cv2.waitKey(100) & 0xFF == ord('q'):
-#  			break
-print( W[0],x[0])
-#print(len(label_names[1,:]))
-#print(np.nonzero(label_names))
+print(max(acc_list))
+# print( W[0],x[0])
