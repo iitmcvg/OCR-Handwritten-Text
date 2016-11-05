@@ -1,2 +1,6 @@
 by_class
 segments.dat
+h
+Textsegmentation/charsegmentold.cpp
+Textsegmentation/output.txt
+Textsegmentation/charboxes.csv
